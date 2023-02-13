@@ -1,10 +1,41 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Container, Typography } from '@mui/material'
+import { Box, Container, Typography, Snackbar } from '@mui/material'
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid'
+import MuiAlert from '@mui/material/Alert'
 import { Edit } from '@mui/icons-material'
 import api from './services/api'
 
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
+})
+
 export default function DataGridDemo() {
+  const [openSuccess, setOpenSuccess] = React.useState(false)
+
+  const handleClickSuccess = () => {
+    setOpenSuccess(true)
+  }
+
+  const handleCloseSuccess = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setOpenSuccess(false)
+  }
+
+  const [openError, setOpenError] = React.useState(false)
+
+  const handleClickError = () => {
+    setOpenError(true)
+  }
+
+  const handleCloseError = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setOpenError(false)
+  }
+
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     {
@@ -27,14 +58,17 @@ export default function DataGridDemo() {
     },
     {
       field: 'actions',
+      headerName: 'Ações',
       type: 'actions',
       width: 80,
       getActions: (params) => [
-        <GridActionsCellItem
-          icon={<Edit />}
-          label="Edit"
-          onClick={editUser(params)}
-        />
+        <>
+          <GridActionsCellItem
+            icon={<Edit />}
+            label="Edit"
+            onClick={editUser(params)}
+          />
+        </>
       ]
     }
   ]
@@ -49,9 +83,9 @@ export default function DataGridDemo() {
 
       api
         .put(`/client/${params.row.id}`, data)
-        .then((response) => alert(response))
-        .catch((err) => {
-          console.error('Ocorreu um erro' + err)
+        .then(() => handleClickSuccess())
+        .catch(() => {
+          handleClickError()
         })
     },
     []
@@ -73,7 +107,6 @@ export default function DataGridDemo() {
   if (clients.isLoading) {
     return <p>Carregando...</p>
   }
-
   return (
     <Container
       sx={{
@@ -94,6 +127,36 @@ export default function DataGridDemo() {
           experimentalFeatures={{ newEditingApi: true }}
         />
       </Box>
+
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={openSuccess}
+        autoHideDuration={1000}
+        onClose={handleCloseSuccess}
+      >
+        <Alert
+          onClose={handleCloseSuccess}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          Editado com sucesso!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={openError}
+        autoHideDuration={1000}
+        onClose={handleCloseError}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity="error"
+          sx={{ width: '100%' }}
+        >
+          Aconteceu algum erro!
+        </Alert>
+      </Snackbar>
     </Container>
   )
 }
